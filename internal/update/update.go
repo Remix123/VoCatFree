@@ -30,6 +30,11 @@ import (
 	"vocat/internal/buildinfo"
 )
 
+// OperationTimeout covers slow release downloads on bandwidth-constrained
+// hosts. Release assets are served through GitHub's CDN and may take several
+// minutes to arrive even though the connection remains healthy.
+const OperationTimeout = 20 * time.Minute
+
 // Options captures the resolved flags for an update invocation.
 type Options struct {
 	Check  bool   // report-only
@@ -65,7 +70,7 @@ func Run(logger *slog.Logger, args []string) error {
 		opts.Target = resolveDefaultTarget()
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), OperationTimeout)
 	defer cancel()
 
 	logger.Info("checking for updates", "repo", opts.Repo, "current", buildinfo.Version)

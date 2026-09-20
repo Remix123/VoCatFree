@@ -444,7 +444,12 @@ func (s *Server) handleUpdateApply(w http.ResponseWriter, r *http.Request) {
 		s.updateMu.Unlock()
 	}()
 
-	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Minute)
+	// Release assets can take several minutes to download on a constrained
+	// uplink. Clear the server's default write deadline while the update is in
+	// progress; the response is written only after verification completes.
+	controller := http.NewResponseController(w)
+	_ = controller.SetWriteDeadline(time.Time{})
+	ctx, cancel := context.WithTimeout(r.Context(), update.OperationTimeout)
 	defer cancel()
 	result, err := s.updateApply(ctx, s.logger, update.Options{
 		Repo:  s.updateRepository,
