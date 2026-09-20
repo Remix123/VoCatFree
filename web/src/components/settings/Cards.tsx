@@ -169,6 +169,9 @@ export function SystemInfoCard({
           <FieldRow label={t("构建时间")} value={info.buildTime} monospace />
         </div>
         <div className="rounded-lg bg-gray-50 p-3 dark:bg-white/5">
+          <FieldRow label={t("更新源")} value={info.updateRepository} monospace copyable />
+        </div>
+        <div className="rounded-lg bg-gray-50 p-3 dark:bg-white/5">
           <FieldRow label={t("配置路径")} value={info.config} monospace copyable />
         </div>
         <div className="rounded-lg bg-gray-50 p-3 dark:bg-white/5">

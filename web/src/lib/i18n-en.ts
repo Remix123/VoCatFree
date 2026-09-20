@@ -351,6 +351,7 @@ export const EN_DICT: Record<string, string> = {
   运行环境: "Runtime environment",
   版本: "Version",
   检查更新: "Check for Updates",
+  更新源: "Update source",
   "发现新版本:": "New version available:",
   暂无更新说明: "No release notes.",
   立即更新并重启: "Update & Restart Now",

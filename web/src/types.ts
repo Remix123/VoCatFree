@@ -69,8 +69,6 @@ export interface ModemSummary {
   homeCarrierName?: string;
   homeCarrierPlmn?: string;
   homeCarrierCountryCode?: string;
-  serviceBlocked?: boolean;
-  blockedReason?: string;
   networkMode: string;
   networkDuplex?: string;
   radioBand: string;
@@ -476,6 +474,7 @@ export interface SystemInfo {
   version: string;
   buildTime: string;
   config: string;
+  updateRepository?: string;
   os?: string;
   architecture?: string;
   uptime?: string;

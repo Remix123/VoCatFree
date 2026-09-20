@@ -347,13 +347,14 @@ func (s *Server) handleSystemInfo(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"data": map[string]any{
-			"version":      buildinfo.Version,
-			"build_time":   buildinfo.BuildTime,
-			"config":       "VOCAT_CONFIG and environment",
-			"os":           runtime.GOOS,
-			"architecture": runtime.GOARCH,
-			"uptime":       formatDuration(time.Since(s.startedAt)),
-			"developer":    s.developerActive(r.Context()),
+			"version":           buildinfo.Version,
+			"build_time":        buildinfo.BuildTime,
+			"config":            "VOCAT_CONFIG and environment",
+			"update_repository": s.updateRepository,
+			"os":                runtime.GOOS,
+			"architecture":      runtime.GOARCH,
+			"uptime":            formatDuration(time.Since(s.startedAt)),
+			"developer":         s.developerActive(r.Context()),
 		},
 	})
 }

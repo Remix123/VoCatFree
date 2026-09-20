@@ -2163,12 +2163,6 @@ func (bot *telegramBot) handleVoWiFi(ctx context.Context, config telegramRuntime
 			bot.sendText(ctx, config, chatID, "VoWiFi 操作失败：请先关闭漫游数据。", bot.homeKeyboard())
 			return
 		}
-		if enabled && entry.Snapshot != nil {
-			if reason := device.RegionBlockReason(entry.Snapshot.IMSI); reason != "" {
-				bot.sendText(ctx, config, chatID, "VoWiFi 操作被拒绝："+reason, nil)
-				return
-			}
-		}
 		previous := stored.VoWiFiEnabled
 		dataRuntime := bot.server.cellularDataRuntime()
 		desiredData := stored.NetworkEnabled && !stored.VoWiFiEnabled

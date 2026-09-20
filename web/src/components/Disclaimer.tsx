@@ -42,8 +42,8 @@ function ZhItems() {
         <strong className="text-indigo-600 dark:text-indigo-400">不得使用属于他人的生产用订户凭证</strong>。
       </Item>
       <Item index={3}>
-        对 MCC 460 / 461（中国大陆）SIM 卡，系统将<strong className="text-red-500 dark:text-red-400">自动强制飞行模式并写入卡策略</strong>
-        ；向 +86 号段发送短信会被服务端拦截。上述为代码层强制控制，严禁移除、绕过、禁用、伪装或破坏。
+        所有 SIM 卡使用相同的服务策略。默认启用 VoWiFi 并进入飞行模式；关闭 VoWiFi 后，可手动关闭飞行模式。
+        向 +86 号段发送短信仍受服务端规则约束。
       </Item>
       <Item index={4}>
         <strong className="text-red-500 dark:text-red-400">禁止用途：</strong>
@@ -91,12 +91,8 @@ function EnItems() {
         .
       </Item>
       <Item index={3}>
-        For MCC 460 / 461 (Chinese mainland) SIM cards, the system will{" "}
-        <strong className="text-red-500 dark:text-red-400">
-          automatically force airplane mode and write a card policy
-        </strong>
-        ; SMS to +86 numbers is blocked by the server. These are code-enforced controls and must not be removed,
-        bypassed, disabled, disguised, or tampered with.
+        All SIM cards use the same service policy. VoWiFi and airplane mode are enabled by default;
+        after disabling VoWiFi, airplane mode can be turned off manually. Server rules for SMS to +86 numbers still apply.
       </Item>
       <Item index={4}>
         <strong className="text-red-500 dark:text-red-400">Prohibited uses:</strong>{" "}

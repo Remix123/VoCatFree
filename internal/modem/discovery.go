@@ -233,7 +233,13 @@ func normalizeUSBIdentity(vendorID, productID, manufacturer, product string) (st
 // it at a different tty after reboot. The live tty plus USB topology/IMEI is
 // safer and is re-resolved on every discovery pass.
 func reliableSerialAlias(serialNumber, alias string) string {
-	if strings.EqualFold(strings.TrimSpace(serialNumber), "Android") {
+	serialNumber = strings.TrimSpace(serialNumber)
+	// Some modem firmware does not expose a USB serial number at all. In that
+	// case udev may still create a generic by-id alias from the manufacturer,
+	// product, and interface name. Identical modules then share that alias and
+	// inserting a second module retargets the first module's path. Keep using
+	// the live tty discovered from the physical USB topology instead.
+	if serialNumber == "" || strings.EqualFold(serialNumber, "Android") {
 		return ""
 	}
 	return alias

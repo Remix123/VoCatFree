@@ -68,25 +68,25 @@ Available features depend on the module firmware, USB composition, SIM/eSIM capa
 As root (including OpenWrt/Kwrt, where `sudo` is normally absent):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/MengMengCode/VoCat/master/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Remix123/VoCatFree/master/scripts/install.sh | bash
 ```
 
 From a normal user on a distribution with sudo:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/MengMengCode/VoCat/master/scripts/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/Remix123/VoCatFree/master/scripts/install.sh | sudo bash
 ```
 
 Check the host's VoWiFi/XFRM prerequisites without installing VoCat:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/MengMengCode/VoCat/master/scripts/install.sh | bash -s -- --check-env
+curl -fsSL https://raw.githubusercontent.com/Remix123/VoCatFree/master/scripts/install.sh | bash -s -- --check-env
 ```
 
 Install a specific version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/MengMengCode/VoCat/master/scripts/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/Remix123/VoCatFree/master/scripts/install.sh -o install.sh
 sudo bash install.sh 0.0.2
 ```
 
@@ -100,7 +100,7 @@ If your kernel cannot provide XFRM/IPsec and you only need non-VoWiFi features
 such as cellular SMS or data, install with `--skip-vowifi-check`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/MengMengCode/VoCat/master/scripts/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/Remix123/VoCatFree/master/scripts/install.sh -o install.sh
 sudo bash install.sh --skip-vowifi-check
 ```
 
@@ -236,7 +236,7 @@ Vocat reads an optional JSON configuration file from `VOCAT_CONFIG`, then applie
 | `VOCAT_SECURE_COOKIES` | `false` | Marks session cookies as secure when HTTPS is used. |
 | `VOCAT_SHUTDOWN_TIMEOUT` | `10s` | Graceful shutdown timeout. |
 | `VOCAT_MAX_REQUEST_BODY_BYTES` | `1048576` | Maximum API request body size. |
-| `VOCAT_REPO` | `MengMengCode/VoCat` | Trusted GitHub repository used by the self-updater, in `owner/name` form. |
+| `VOCAT_REPO` | `Remix123/VoCatFree` | Trusted GitHub repository used by the self-updater, in `owner/name` form. |
 | `GITHUB_TOKEN` | empty | Optional GitHub token for private repositories or higher API limits. |
 
 User-supplied Apple carrier bundles can be converted into reviewable,
@@ -268,13 +268,13 @@ Profile switching and SMS submission use one-time confirmation buttons. The bot 
 Check for a newer GitHub Release:
 
 ```bash
-vocat update --check --repo MengMengCode/VoCat
+vocat update --check --repo Remix123/VoCatFree
 ```
 
 Install the latest release:
 
 ```bash
-sudo vocat update --repo MengMengCode/VoCat
+sudo vocat update --repo Remix123/VoCatFree
 ```
 
 The updater downloads the binary matching the current Linux architecture, verifies it with the published `SHA256SUMS`, replaces the executable atomically, and restarts the `vocat` systemd service when available.

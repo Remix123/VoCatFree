@@ -50,6 +50,9 @@ func TestNormalizeEC20AndroidUSBIdentity(t *testing.T) {
 
 func TestReliableSerialAliasRejectsGenericAndroidSerial(t *testing.T) {
 	alias := "/dev/serial/by-id/usb-Android_Android-if02-port0"
+	if got := reliableSerialAlias("", alias); got != "" {
+		t.Fatalf("missing serial alias = %q, want empty", got)
+	}
 	if got := reliableSerialAlias("Android", alias); got != "" {
 		t.Fatalf("generic Android alias = %q, want empty", got)
 	}
