@@ -30,10 +30,13 @@ import (
 	"vocat/internal/buildinfo"
 )
 
-// OperationTimeout covers slow release downloads on bandwidth-constrained
-// hosts. Release assets are served through GitHub's CDN and may take several
-// minutes to arrive even though the connection remains healthy.
-const OperationTimeout = 20 * time.Minute
+// OperationAttemptTimeout limits each direct or accelerated download attempt.
+// A complete update may use both attempts, so OperationTimeout covers the
+// direct attempt followed by one accelerated-URL retry.
+const (
+	OperationAttemptTimeout = 3 * time.Minute
+	OperationTimeout        = 2 * OperationAttemptTimeout
+)
 
 // Options captures the resolved flags for an update invocation.
 type Options struct {

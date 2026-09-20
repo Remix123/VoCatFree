@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -40,6 +41,7 @@ type CheckResult struct {
 
 const (
 	githubAPI         = "https://api.github.com"
+	githubProxyPrefix = "https://gh-proxy.com/"
 	DefaultRepository = "Remix123/VoCatFree"
 )
 
@@ -72,16 +74,7 @@ func LatestRelease(ctx context.Context, repo, token string) (*Release, error) {
 		return nil, fmt.Errorf("update: invalid repository %q (expected owner/name)", repo)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, githubAPI+"/repos/"+repo+"/releases/latest", nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Accept", "application/vnd.github+json")
-	if token != "" {
-		req.Header.Set("Authorization", "Bearer "+token)
-	}
-
-	resp, err := githubHTTPClient.Do(req)
+	resp, err := githubRequest(ctx, githubAPI+"/repos/"+repo+"/releases/latest", token)
 	if err != nil {
 		return nil, fmt.Errorf("update: fetch latest release: %w", err)
 	}
@@ -132,6 +125,29 @@ func CheckLatest(ctx context.Context, repo, token, current string) (CheckResult,
 // redirect to a pre-signed S3 URL; the token is dropped on redirect, which is
 // the expected public-CDN flow).
 func downloadAsset(ctx context.Context, url, token string, dst io.Writer) error {
+	attemptContext, cancel := context.WithTimeout(ctx, OperationAttemptTimeout)
+	err := downloadAssetAttempt(attemptContext, url, token, dst)
+	cancel()
+	if err == nil {
+		return nil
+	}
+	if ctx.Err() != nil || !shouldTryProxy(err) {
+		return err
+	}
+	if resetErr := resetDownloadDestination(dst); resetErr != nil {
+		return fmt.Errorf("%w; update: cannot retry through accelerated URL: %v", err, resetErr)
+	}
+
+	proxyContext, cancelProxy := context.WithTimeout(ctx, OperationAttemptTimeout)
+	proxyErr := downloadAssetAttempt(proxyContext, acceleratedURL(url), "", dst)
+	cancelProxy()
+	if proxyErr != nil {
+		return fmt.Errorf("update: direct download failed: %v; accelerated download failed: %w", err, proxyErr)
+	}
+	return nil
+}
+
+func downloadAssetAttempt(ctx context.Context, url, token string, dst io.Writer) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -152,4 +168,72 @@ func downloadAsset(ctx context.Context, url, token string, dst io.Writer) error 
 		return fmt.Errorf("update: read asset body: %w", err)
 	}
 	return nil
+}
+
+func githubRequest(ctx context.Context, url, token string) (*http.Response, error) {
+	attemptContext, cancel := context.WithTimeout(ctx, OperationAttemptTimeout)
+	resp, err := doGitHubRequest(attemptContext, url, token)
+	cancel()
+	if err == nil {
+		return resp, nil
+	}
+	if ctx.Err() != nil || !shouldTryProxy(err) {
+		return nil, err
+	}
+
+	proxyContext, cancelProxy := context.WithTimeout(ctx, OperationAttemptTimeout)
+	proxyResp, proxyErr := doGitHubRequest(proxyContext, acceleratedURL(url), "")
+	cancelProxy()
+	if proxyErr != nil {
+		return nil, fmt.Errorf("update: direct GitHub request failed: %v; accelerated request failed: %w", err, proxyErr)
+	}
+	return proxyResp, nil
+}
+
+func doGitHubRequest(ctx context.Context, url, token string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/vnd.github+json")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	return githubHTTPClient.Do(req)
+}
+
+func acceleratedURL(url string) string {
+	if strings.HasPrefix(url, githubProxyPrefix) {
+		return url
+	}
+	return githubProxyPrefix + url
+}
+
+func shouldTryProxy(err error) bool {
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		return errors.Is(err, context.DeadlineExceeded)
+	}
+	var networkError net.Error
+	return errors.As(err, &networkError) && networkError.Timeout()
+}
+
+func resetDownloadDestination(dst io.Writer) error {
+	if progress, ok := dst.(*downloadProgressWriter); ok {
+		progress.downloaded.Store(0)
+		return resetDownloadDestination(progress.destination)
+	}
+	if resetter, ok := dst.(interface{ Reset() }); ok {
+		resetter.Reset()
+		return nil
+	}
+	if seeker, ok := dst.(io.Seeker); ok {
+		if truncater, ok := dst.(interface{ Truncate(int64) error }); ok {
+			if err := truncater.Truncate(0); err != nil {
+				return err
+			}
+			_, err := seeker.Seek(0, io.SeekStart)
+			return err
+		}
+	}
+	return fmt.Errorf("destination does not support reset")
 }
