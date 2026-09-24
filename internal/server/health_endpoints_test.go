@@ -65,3 +65,19 @@ func TestOperationalHealthEndpointsRejectPOST(t *testing.T) {
 		}
 	}
 }
+
+func TestSecurityHeadersAllowEmbeddedWebFonts(t *testing.T) {
+	app := newTestApplication(t)
+	response, err := app.client.Get(app.server.URL + "/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		t.Fatalf("status = %d, want %d", response.StatusCode, http.StatusOK)
+	}
+	csp := response.Header.Get("Content-Security-Policy")
+	if !strings.Contains(csp, "font-src 'self' data:;") {
+		t.Fatalf("CSP font-src = %q, want embedded data fonts to be allowed", csp)
+	}
+}

@@ -656,7 +656,7 @@ func (s *Server) securityHeaders(next http.Handler) http.Handler {
 				"Content-Security-Policy",
 				"default-src 'self'; base-uri 'self'; frame-ancestors 'self'; "+
 					"object-src 'none'; form-action 'self'; "+
-					"script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; "+
+					"script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; "+
 					"img-src 'self' data:; connect-src 'self'",
 			)
 		} else {
@@ -665,7 +665,7 @@ func (s *Server) securityHeaders(next http.Handler) http.Handler {
 				"Content-Security-Policy",
 				"default-src 'self'; base-uri 'self'; frame-ancestors 'none'; "+
 					"object-src 'none'; form-action 'self'; "+
-					"script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; "+
+					"script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; "+
 					"img-src 'self' data:; connect-src 'self'",
 			)
 		}
