@@ -385,6 +385,32 @@ func TestSysFSDiscoveryFindsPCIeMHIWWANWithoutUSBBus(t *testing.T) {
 	}
 }
 
+func TestSysFSDiscoveryDoesNotReportUSBWWANControlAsMHI(t *testing.T) {
+	root := t.TempDir()
+	sysRoot := filepath.Join(root, "sys")
+	devRoot := filepath.Join(root, "dev")
+	usbDevice := filepath.Join(sysRoot, "devices", "platform", "soc", "usb1", "1-1.2")
+	wwanPort := filepath.Join(usbDevice, "1-1.2:1.4", "wwan", "wwan2", "wwan2qmi0")
+	classRoot := filepath.Join(sysRoot, "class", "wwan")
+
+	mustWrite(t, filepath.Join(usbDevice, "idVendor"), "2c7c\n")
+	mustWrite(t, filepath.Join(usbDevice, "idProduct"), "0125\n")
+	mustWrite(t, wwanPort, "")
+	mustMkdir(t, classRoot)
+	if err := os.Symlink(wwanPort, filepath.Join(classRoot, "wwan2qmi0")); err != nil {
+		t.Fatal(err)
+	}
+	mustWrite(t, filepath.Join(devRoot, "wwan2qmi0"), "")
+
+	candidates, err := NewSysFSDiscoverer(sysRoot, devRoot).Discover(context.Background())
+	if err != nil {
+		t.Fatalf("Discover: %v", err)
+	}
+	if len(candidates) != 0 {
+		t.Fatalf("candidates = %#v, want USB-backed WWAN port excluded from MHI discovery", candidates)
+	}
+}
+
 func TestSysFSDiscoveryFindsWWANFromDevNodesWithoutClassDirectory(t *testing.T) {
 	root := t.TempDir()
 	sysRoot := filepath.Join(root, "sys")

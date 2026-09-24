@@ -252,9 +252,10 @@ type discoveredWWANDevice struct {
 	sysPath  string
 }
 
-// discoverWWAN covers PCIe/MHI modems exposed through Linux's wwan subsystem,
-// for example /dev/wwan0at0 and /dev/wwan0qmi0. These devices do not appear on
-// the USB bus and therefore need a separate discovery path.
+// discoverWWAN covers platform PCIe/MHI modems exposed through Linux's wwan
+// subsystem, for example /dev/wwan0at0 and /dev/wwan0qmi0. USB QMI control
+// ports may also appear under /sys/class/wwan; those belong to the USB modem
+// candidates already discovered above and must not be reported a second time.
 func (d *SysFSDiscoverer) discoverWWAN(ctx context.Context) ([]Candidate, error) {
 	classRoot := filepath.Join(d.SysRoot, "class", "wwan")
 	classEntries, err := os.ReadDir(classRoot)
@@ -327,6 +328,9 @@ func (d *SysFSDiscoverer) discoverWWAN(ctx context.Context) ([]Candidate, error)
 		if group.sysPath == "" {
 			group.sysPath = filepath.Join(classRoot, "wwan"+group.index)
 		}
+		if isUSBBackedWWAN(group.sysPath) {
+			continue
+		}
 		vendorID, productID := readPCIIdentity(group.sysPath, d.SysRoot)
 		manufacturer := ""
 		if vendorID == "17cb" {
@@ -348,6 +352,23 @@ func (d *SysFSDiscoverer) discoverWWAN(ctx context.Context) ([]Candidate, error)
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].ID < result[j].ID })
 	return result, nil
+}
+
+// isUSBBackedWWAN reports whether a WWAN sysfs path belongs to a USB device.
+// Linux exposes QMI ports for USB modems in /sys/class/wwan too, so the class
+// name alone is not enough to identify an MHI/platform modem. USB device
+// ancestors expose both idVendor and idProduct; platform WWAN devices do not.
+func isUSBBackedWWAN(path string) bool {
+	for current := filepath.Clean(path); ; current = filepath.Dir(current) {
+		if readTrimmed(filepath.Join(current, "idVendor")) != "" &&
+			readTrimmed(filepath.Join(current, "idProduct")) != "" {
+			return true
+		}
+		parent := filepath.Dir(current)
+		if parent == current {
+			return false
+		}
+	}
 }
 
 // selectWWANATPort prefers the secondary AT port (…at1) over the primary
